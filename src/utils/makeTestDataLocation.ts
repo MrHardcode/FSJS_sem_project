@@ -29,6 +29,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
     await positionsCollection.createIndex({ "lastUpdated": 1 }, { expireAfterSeconds: 30 })
     console.log("Creating dublicate index...");
     await positionsCollection.createIndex({ "lastUpdated": 1 }, { expireAfterSeconds: 30 })
+    await positionsCollection.createIndex({ userName: 1 }, { unique: true })
     await positionsCollection.createIndex({ location: "2dsphere" })
     const positions = [
       positionCreator(12.48, 55.77, team1.userName, team1.name, true),
@@ -60,7 +61,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
     console.log(`Inserted ${posts.insertedCount} test Posts`)
 
     console.log(`Inserted ${status.insertedCount} test users`)
-    console.log(`Inserted ${locations.insertedCount} test Locationa`)
+    console.log(`Inserted ${locations.insertedCount} test Locations`)
     console.log(`NEVER, NEVER, NEVER run this on a production database`)
 
   } catch (err) {

@@ -13,7 +13,6 @@ import { type } from 'os';
 let positionCollection: mongo.Collection;
 let postCollection: mongo.Collection;
 const EXPIRES_AFTER = 30;
-const NEAR_POST_DISTANCE = 5;
 
 export default class GameFacade {
 
@@ -37,6 +36,8 @@ export default class GameFacade {
       await positionCollection.createIndex({ "lastUpdated": 1 }, { expireAfterSeconds: EXPIRES_AFTER })
       //2) Create 2dsphere index on location
       await positionCollection.createIndex({ location: "2dsphere" })
+      //3) Create unique index for userName since it's unique in the userCollection and is going to be used and searched for a lot
+      await positionCollection.createIndex({ userName: 1 }, { unique: true })
 
       //TODO uncomment if you plan to do this part of the exercise
       postCollection = client.db(dbName).collection(POST_COLLECTION_NAME);
@@ -100,7 +101,6 @@ export default class GameFacade {
           name: player.name,
           lon: player.location.coordinates[0],
           lat: player.location.coordinates[1]
-          // Complete this, using the requirements
         }
       })
       return formatted
@@ -130,6 +130,37 @@ export default class GameFacade {
     }
   }
 
+  static async updatePosition(userName: string, lat: number, lon: number): Promise<any> {
+    const point = { type: "Point", coordinates: [lon, lat] }
+    const date = new Date();
+    try {
+      const found = await positionCollection.findOneAndUpdate(
+        { userName }, //Add what we are searching for (the userName in a Position Document)
+        {
+          $set: {
+            lastUpdated: date,
+            userName,
+            location: point
+          }
+        },
+        //upsert is not necessary. Only use this endpoint if document already exists
+        { /* upsert: true, */ returnOriginal: false }
+      )
+      if (found.value == null) {
+        throw new ApiError("No position found. Could not update", 400);
+      }
+      const formatted: IPosition = {
+        lastUpdated: found.value.lastUpdated,
+        userName: found.value.userName,
+        name: found.value.name,
+        location: found.value.location
+      }
+      return formatted;
+    } catch (err) {
+      throw err;
+    }
+  }
+
   static async getPostIfReached(postId: string, lat: number, lon: number): Promise<any> {
     try {
       const post: IPost | null = await postCollection.findOne(
@@ -143,7 +174,7 @@ export default class GameFacade {
                 type: "Point",
                 coordinates: [lon, lat]
               },
-              $maxDistance: NEAR_POST_DISTANCE
+              $maxDistance: this.DIST_TO_CENTER
             }
           }
         }

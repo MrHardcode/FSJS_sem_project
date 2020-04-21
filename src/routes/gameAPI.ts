@@ -42,6 +42,18 @@ router.post('/getPostIfReached', async function (req, res, next) {
   }
 })
 
+router.post('/updatePosition', async function (req, res, next) {
+  try {
+    const userName= req.body.userName;
+    const lon = req.body.lon;
+    const lat = req.body.lat;
+    let result = await gameFacade.updatePosition(userName, lat, lon);
+    res.send(result);
+  } catch (err) {
+    next(err);
+  }
+})
+
 router.post('/createNewPost', async function (req, res, next) {
   try {
     const name = req.body.name;

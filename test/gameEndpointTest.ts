@@ -107,6 +107,25 @@ describe("Verify /gameapi/getPostIfReached", () => {
     expect(result[1].name).to.be.equal("Team3")
   })
 
+  it("Should update the position of user t1", async function () {
+    //  //@ts-ignore
+    this.timeout(MOCHA_TIMEOUT)
+    const payload = { "userName": "t1", "lat": 55.77, "lon": 12.459 }
+    const config = {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    }
+    const result = await fetch(`${URL}/gameapi/updatePosition`, config).then(r => r.json());
+    const date = new Date();
+    expect(result.location.type).to.be.equal("Point")
+    expect(result.name).to.be.equal("Team1")
+    expect(date).to.be.greaterThan(new Date(result.lastUpdated))
+  })
+
   it("Should NOT find team2, since not in range", async function () {
     //  //@ts-ignore
     this.timeout(MOCHA_TIMEOUT)

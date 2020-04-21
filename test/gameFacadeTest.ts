@@ -82,6 +82,29 @@ describe("Verify the GameFacade", () => {
     })
   })
 
+  describe("Verify updatePosition", () => {
+    it("Should update the position of Team1", async () => {
+      const result = await GameFacade.updatePosition("t1", 12.48, 55.87);
+      expect(result.name).to.be.equal("Team1");
+      expect(result.userName).to.be.equal("t1");
+      expect(result.location.type).to.be.equal("Point");
+    })
+  })
+
+  describe("Verify updatePosition", () => {
+    it("Should not update the position of non-existing user", async () => {
+      try {
+        const result = await GameFacade.updatePosition("t20", 12.48, 55.79);
+        throw new Error("Should NEVER get here")
+      } catch (err) {
+        console.log(err);
+        expect(err.errorCode).to.be.equal(400)
+        expect(err.message).to.be.equal("No position found. Could not update")
+      }
+
+    })
+  })
+
   describe("Verify nearbyPlayers", () => {
     it("Should not find Team2 (wrong credentials)", async () => {
       try {
